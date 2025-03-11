@@ -21,19 +21,11 @@
 
 ### 直接開啟（推薦）
 
-1. 下載或 Clone 此專案：
-   ```bash
-   git clone https://github.com/你的帳號/snake-sweeper.git
-   ```
-2. 開啟 `index.html` 即可開始遊戲！
+* 使用[此連結](https://philipp314.github.io/minesnake/main.html)即可直接開啟。
 
-### 透過 Live Server 運行（開發模式）
+### 下載後開啟
 
-如果你有 VS Code，建議使用 **Live Server** 套件來運行：
-
-1. 安裝 [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
-2. 右鍵 `index.html` > **Open with Live Server**
-3. 瀏覽器將自動開啟遊戲
+* 下載`main.html`後直接以瀏覽器開啟即可。
 
 ## 🎮 操作方式
 
@@ -43,10 +35,6 @@
 | ⬇️ 下鍵 | 向下移動 |
 | ⬅️ 左鍵 | 向左移動 |
 | ➡️ 右鍵 | 向右移動 |
-
-## 🖼️ 遊戲截圖
-
-🚀 **開發中，敬請期待！**
 
 ## 🐜 授權
 
