@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>貪吃蛇與採地雷遊戲</title>
+  <style>
+    /* 基本樣式設定 */
+    body {
+      text-align: center;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #gameCanvas {
+      background-color: #fff;
+      border: 2px solid #000;
+    }
+    #score {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>貪吃蛇與採地雷遊戲</h1>
+  <canvas id="gameCanvas" width="500" height="500"></canvas>
+  <p id="score">分數: 0</p>
+  
+  <script>
+    // -------------------- 遊戲基本設定 --------------------
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 設定每格的像素大小與畫布的行列數
+    const gridSize = 25;
+    const cols = canvas.width / gridSize;
+    const rows = canvas.height / gridSize;
+    
+    // 固定的水果數量
+    const initialFruits = 10;
+    // 遊戲更新速度（毫秒）
+    const gameSpeed = 150;
+    
+    // 蛇的初始設定（從畫布中央開始）
+    let snake = [{ x: Math.floor(cols / 2), y: Math.floor(rows / 2) }];
+    // 初始移動方向為靜止（等待玩家輸入）
+    let direction = { x: 0, y: -1 };
+    
+    // 水果（地雷）的存放陣列
+    let fruits = [];
+    let score = 0;
+    
+    // -------------------- 遊戲函式區 --------------------
+    // 初始化固定數量的水果
+    function initFruits() {
+      fruits = [];
+      while (fruits.length < initialFruits) {
+        let pos = {
+          x: Math.floor(Math.random() * cols),
+          y: Math.floor(Math.random() * rows)
+        };
+        // 避免產生在蛇身上或重複位置
+        if (!snake.some(cell => cell.x === pos.x && cell.y === pos.y) &&
+            !fruits.some(fruit => fruit.x === pos.x && fruit.y === pos.y)) {
+          fruits.push(pos);
+        }
+      }
+    }
+    
+    // 當蛇吃到水果後，產生一個新的水果
+    function spawnFruit() {
+      let pos;
+      do {
+        pos = {
+          x: Math.floor(Math.random() * cols),
+          y: Math.floor(Math.random() * rows)
+        };
+      } while (
+        snake.some(cell => cell.x === pos.x && cell.y === pos.y) ||
+        fruits.some(fruit => fruit.x === pos.x && fruit.y === pos.y)
+      );
+      fruits.push(pos);
+    }
+    
+    // 更新遊戲狀態：移動蛇頭、檢查碰撞、處理水果
+    function update() {
+      // 根據當前方向產生新蛇頭
+      const newHead = {
+        x: snake[0].x + direction.x,
+        y: snake[0].y + direction.y
+      };
+      
+      // 檢查是否撞牆或撞到自己
+      if (
+        newHead.x < 0 || newHead.x >= cols ||
+        newHead.y < 0 || newHead.y >= rows ||
+        snake.some(cell => cell.x === newHead.x && cell.y === newHead.y)
+      ) {
+        clearInterval(gameInterval);
+        alert('遊戲結束！您的分數: ' + score);
+        return;
+      }
+      
+      // 將新蛇頭加入至蛇身最前端
+      snake.unshift(newHead);
+      
+      // 檢查是否有吃到水果
+      const fruitIndex = fruits.findIndex(fruit => fruit.x === newHead.x && fruit.y === newHead.y);
+      if (fruitIndex !== -1) {
+        score++;
+        document.getElementById('score').textContent = '分數: ' + score;
+        // 移除被吃的水果
+        fruits.splice(fruitIndex, 1);
+        // 補充一個新的水果，保持數量固定
+        spawnFruit();
+      } else {
+        // 未吃到則刪除蛇尾，使蛇保持移動的效果
+        snake.pop();
+      }
+      
+      draw();
+    }
+    
+    // 繪製遊戲畫面：水果、蛇、及蛇身上顯示周邊水果數量
+    function draw() {
+      // 清除畫布
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      /*
+      // 繪製水果（以紅色圓形表示）
+      fruits.forEach(fruit => {
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(
+          fruit.x * gridSize + gridSize / 2,
+          fruit.y * gridSize + gridSize / 2,
+          gridSize / 2 - 2,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      });
+      */
+      // 繪製蛇與計算每個身體格周圍的水果數量（八鄰域）
+      snake.forEach((cell, index) => {
+        // 計算周圍8格內的水果數量
+        let count = 0;
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = cell.x + dx;
+            const ny = cell.y + dy;
+            if (fruits.some(fruit => fruit.x === nx && fruit.y === ny)) {
+              count++;
+            }
+          }
+        }
+        
+        // 蛇頭與蛇身使用不同顏色
+        ctx.fillStyle = index === 0 ? 'green' : 'lime';
+        ctx.fillRect(cell.x * gridSize, cell.y * gridSize, gridSize, gridSize);
+        
+        // 在格子中間顯示該格周圍水果的數量
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(count, cell.x * gridSize + gridSize / 2, cell.y * gridSize + gridSize / 2);
+      });
+    }
+    
+    // 監聽鍵盤事件，改變蛇的移動方向（避免直接反向移動）
+    window.addEventListener('keydown', (e) => {
+      switch(e.key) {
+        case 'ArrowUp':
+          if (direction.y !== 1) direction = { x: 0, y: -1 };
+          break;
+        case 'ArrowDown':
+          if (direction.y !== -1) direction = { x: 0, y: 1 };
+          break;
+        case 'ArrowLeft':
+          if (direction.x !== 1) direction = { x: -1, y: 0 };
+          break;
+        case 'ArrowRight':
+          if (direction.x !== -1) direction = { x: 1, y: 0 };
+          break;
+      }
+    });
+    
+    // -------------------- 遊戲初始化 --------------------
+    initFruits();
+    draw();
+    const gameInterval = setInterval(update, gameSpeed);
+  </script>
+</body>
+</html>
